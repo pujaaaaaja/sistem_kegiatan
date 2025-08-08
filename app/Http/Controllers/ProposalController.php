@@ -58,20 +58,14 @@ class ProposalController extends Controller
      */
     public function store(StoreProposalRequest $request)
     {
-        $this->authorize('create', Proposal::class);
-
         $data = $request->validated();
-        $dokumen = $data['dokumen_path'] ?? null;
-        $data['pengusul_id'] = Auth::id();
-        $data['status'] = 'diajukan';
-
-        if ($dokumen) {
-            $data['dokumen_path'] = $dokumen->store('proposal_dokumen', 'public');
-        }
+        $data['user_id'] = Auth::id();
+        $path = $data['file_path']->store('proposal_files', 'public');
+        $data['file_path'] = $path;
 
         Proposal::create($data);
 
-        return to_route('proposal.myIndex')->with('success', 'Proposal berhasil diajukan dan sedang menunggu verifikasi.');
+        return redirect()->route('proposal.myIndex')->with('success', 'Proposal berhasil dibuat.');
     }
 
     /**
@@ -81,7 +75,7 @@ class ProposalController extends Controller
     public function myProposals()
     {
         $proposals = Proposal::query()
-            ->where('pengusul_id', Auth::id())
+            ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 

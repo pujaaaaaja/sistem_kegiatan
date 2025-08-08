@@ -1,4 +1,5 @@
 <?php
+// Ganti Isi File: database/migrations/2025_07_05_104707_create_berita_acaras_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -13,18 +14,12 @@ return new class extends Migration
     {
         Schema::create('berita_acaras', function (Blueprint $table) {
             $table->id();
-            
-            // PERBAIKAN: Relasi diubah dari dokumentasi ke kegiatan    
-            $table->foreignId('kegiatan_id')->constrained('kegiatans')->onDelete('cascade');
-            
+            $table->foreignId('kegiatan_id')->constrained()->onDelete('cascade');
+            // Menambahkan kolom nama_berita_acara
             $table->string('nama_berita_acara');
-            $table->text('ket_berita_acara')->nullable();
-            // ... (kolom lain sesuai ERD)
-            $table->integer('jumlah_saksi_berita_acara')->nullable();
-            $table->string('posisi_peletakan')->nullable();
-            $table->integer('jumlah')->nullable();
-            $table->string('satuan')->nullable();
-            $table->string('kedalaman')->nullable();
+            $table->string('nomor_berita_acara');
+            $table->date('tanggal_berita_acara');
+            $table->string('dokumen_path');
             $table->timestamps();
         });
     }

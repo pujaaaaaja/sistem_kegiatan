@@ -24,12 +24,11 @@ class StoreProposalRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Sesuaikan dengan form yang simpel
         return [
             'nama_proposal' => ['required', 'string', 'max:255'],
-            'deskripsi' => ['required', 'string'],
-            'tujuan' => ['required', 'string'],
-            'tanggal_pengajuan' => ['required', 'date'],
-            'dokumen_path' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:2048'],
+            'tanggal_proposal' => ['required', 'date'],
+            'file_path' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:2048'],
         ];
     }
 }

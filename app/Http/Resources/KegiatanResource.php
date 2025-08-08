@@ -12,20 +12,21 @@ class KegiatanResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'uuid' => $this->uuid,
             'nama_kegiatan' => $this->nama_kegiatan,
-            'ket_kegiatan' => $this->ket_kegiatan,
-            'tanggal_kegiatan' => $this->tanggal_kegiatan,
-            'status_akhir' => $this->status_akhir,
-            'sktl_url' => $this->sktl_url,
-            'sktl_penyerahan_path' => $this->sktl_penyerahan_path,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'tim' => new TimResource($this->whenLoaded('tim')),
+            'anggaran' => 'Rp ' . number_format($this->anggaran, 2, ',', '.'),
+            'tanggal_mulai' => $this->tanggal_mulai,
+            'tanggal_selesai' => $this->tanggal_selesai,
+            'tahapan' => $this->tahapan,
+            'sktl_url' => $this->sktl ? Storage::url($this->sktl) : null,
+            // Tambahkan URL untuk SKTL Penyerahan
+            'sktl_penyerahan_url' => $this->sktl_penyerahan_path ? Storage::url($this->sktl_penyerahan_path) : null,
             'proposal' => new ProposalResource($this->whenLoaded('proposal')),
-            'dokumentasi' => DokumentasikegiatanResource::collection($this->whenLoaded('dokumentasi')),
-            'berita_acara' => new BeritaAcaraResource($this->whenLoaded('beritaAcara')),
-            'kontrak' => new KontrakResource($this->whenLoaded('kontrak')),
+            'tim' => new TimResource($this->whenLoaded('tim')),
+            'dokumentasi' => DokumentasiKegiatanResource::collection($this->whenLoaded('dokumentasi')),
+            // Load relasi baru
+            'kebutuhan' => KebutuhanResource::collection($this->whenLoaded('kebutuhan')),
+            'kontrak' => KontrakResource::collection($this->whenLoaded('kontrak')),
+            'berita_acaras' => BeritaAcaraResource::collection($this->whenLoaded('beritaAcaras')),
         ];
     }
 }

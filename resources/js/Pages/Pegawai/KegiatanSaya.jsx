@@ -1,139 +1,240 @@
-import { useState, useEffect } from "react";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, router, useForm } from "@inertiajs/react";
-import Pagination from "@/Components/Pagination";
-import Modal from "@/Components/Modal";
-import Swal from 'sweetalert2';
-// Import komponen-komponen lainnya (Button, Input, dll.)
-import SecondaryButton from "@/Components/SecondaryButton";
-import PrimaryButton from "@/Components/PrimaryButton";
-import InputLabel from "@/Components/InputLabel";
-import TextAreaInput from "@/Components/TextAreaInput";
-import InputError from "@/Components/InputError";
-import TextInput from "@/Components/TextInput";
-import SelectInput from "@/Components/SelectInput";
+import PegawaiLayout from '@/Layouts/PegawaiLayout';
+import { Head, useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import { Tab } from '@headlessui/react';
+import PerjalananDinasView from './Partials/PerjalananDinasView';
+import DokumentasiObservasiView from './Partials/DokumentasiObservasiView';
+import MenungguProsesKabidView from './Partials/MenungguProsesKabidView';
+import DokumentasiPenyerahanView from './Partials/DokumentasiPenyerahanView';
+import PenyelesaianView from './Partials/PenyelesaianView';
+import SelesaiView from './Partials/SelesaiView';
+import Modal from '@/Components/Modal';
+import PrimaryButton from '@/Components/PrimaryButton';
+import TextInput from '@/Components/TextInput';
+import InputLabel from '@/Components/InputLabel';
+import InputError from '@/Components/InputError';
+import SecondaryButton from '@/Components/SecondaryButton';
+import TextAreaInput from '@/Components/TextAreaInput';
+import SelectInput from '@/Components/SelectInput';
 
-// --- IMPORT KOMPONEN VIEW YANG BARU DIBUAT ---
-import PerjalananDinasView from "./Partials/PerjalananDinasView";
-import DokumentasiObservasiView from "./Partials/DokumentasiObservasiView";
-import MenungguProsesKabidView from "./Partials/MenungguProsesKabidView";
-import DokumentasiPenyerahanView from "./Partials/DokumentasiPenyerahanView";
-import PenyelesaianView from "./Partials/PenyelesaianView";
-import SelesaiView from "./Partials/SelesaiView";
+function classNames(...classes) {
+    return classes.filter(Boolean).join(' ');
+}
 
-export default function KegiatanSaya({ auth, kegiatans, queryParams = {}, success }) {
-    queryParams = queryParams || {};
-    const [activeTab, setActiveTab] = useState(queryParams.tahapan || 'semua');
-    const [modalState, setModalState] = useState({ type: null, kegiatan: null });
+export default function KegiatanSaya({ auth, kegiatans }) {
+    // State untuk setiap modal
+    const [modalState, setModalState] = useState({
+        showKebutuhan: false,
+        showKontrak: false,
+        showBeritaAcara: false,
+        selectedKegiatan: null,
+    });
+    
+    // Forms untuk setiap modal
+    const formKebutuhan = useForm({
+        nama_kebutuhan: '',
+        jumlah: '',
+        satuan: '',
+        harga_satuan: '',
+    });
 
-    // ... (Semua logika useEffect, useForm, handleTabClick, modal, dan form submit tetap sama)
-    useEffect(() => {
-        if (success) {
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: success, timer: 3000, showConfirmButton: false, });
-            const newParams = { ...queryParams };
-            router.get(route('pegawai.kegiatan.myIndex', newParams), {}, { preserveState: true, replace: true });
-        }
-    }, [success]);
-    const { post: postConfirm, processing: processingConfirm } = useForm();
-    const { data: docsData, setData: setDocsData, post: postDocs, processing: processingDocs, errors: docsErrors, reset: resetDocs } = useForm({
-        nama_dokumentasi: '', catatan_observasi: '', foto_path: null,
+    const formKontrak = useForm({
+        nama_pihak_ketiga: '',
+        nomor_kontrak: '',
+        tanggal_kontrak: '',
+        dokumen_kontrak: null,
     });
-    const { data: penyerahanData, setData: setPenyerahanData, post: postPenyerahan, processing: processingPenyerahan, errors: penyerahanErrors, reset: resetPenyerahan } = useForm({
-        nama_dokumentasi: '', foto_path: null,
+
+    const formBeritaAcara = useForm({
+        nama_berita_acara: '',
+        nomor_berita_acara: '',
+        tanggal_berita_acara: '',
+        dokumen_berita_acara: null,
     });
-    const { data: penyelesaianData, setData: setPenyelesaianData, post: postPenyelesaian, processing: processingPenyelesaian, errors: penyelesaianErrors, reset: resetPenyelesaian } = useForm({
-        file_berita_acara: null, status_akhir: 'Selesai',
-    });
-    const handleTabClick = (tahapan) => {
-        setActiveTab(tahapan);
-        const newParams = { ...queryParams };
-        if (tahapan === 'semua') {
-            delete newParams.tahapan;
-        } else {
-            newParams.tahapan = tahapan;
-        }
-        router.get(route("pegawai.kegiatan.myIndex"), newParams, { preserveState: true, replace: true });
+    
+    // Fungsi untuk membuka modal
+    const openModal = (type, kegiatan) => {
+        setModalState({ ...modalState, [`show${type}`]: true, selectedKegiatan: kegiatan });
     };
-    const getButtonTabClass = (tahapan) => `px-5 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 ${activeTab === tahapan ? 'text-white bg-blue-700 hover:bg-blue-800' : 'text-gray-900 bg-white border border-gray-200 hover:bg-gray-100 hover:text-blue-700'}`;
-    const openModal = (type, kegiatan) => setModalState({ type, kegiatan });
-    const closeModal = () => {
-        setModalState({ type: null, kegiatan: null });
-        resetDocs(); resetPenyerahan(); resetPenyelesaian();
+
+    // Fungsi untuk menutup modal
+    const closeModal = (type) => {
+        setModalState({ ...modalState, [`show${type}`]: false, selectedKegiatan: null });
+        // Reset form yang sesuai
+        if (type === 'Kebutuhan') formKebutuhan.reset();
+        if (type === 'Kontrak') formKontrak.reset();
+        if (type === 'BeritaAcara') formBeritaAcara.reset();
     };
-    const handleConfirm = (e) => {
+
+    // Fungsi submit untuk setiap form
+    const submitKebutuhan = (e) => {
         e.preventDefault();
-        postConfirm(route('pegawai.kegiatan.confirmKehadiran', modalState.kegiatan.id), { onSuccess: closeModal });
+        formKebutuhan.post(route('pegawai.kegiatan.storeKebutuhan', modalState.selectedKegiatan.id), {
+            onSuccess: () => closeModal('Kebutuhan'),
+        });
     };
-    const handleDocsSubmit = (e) => {
+
+    const submitKontrak = (e) => {
         e.preventDefault();
-        postDocs(route('pegawai.kegiatan.storeObservasi', modalState.kegiatan.id), { onSuccess: closeModal });
+        formKontrak.post(route('pegawai.kegiatan.storeKontrak', modalState.selectedKegiatan.id), {
+            onSuccess: () => closeModal('Kontrak'),
+        });
     };
-    const handlePenyerahanSubmit = (e) => {
+
+    const submitBeritaAcara = (e) => {
         e.preventDefault();
-        postPenyerahan(route('pegawai.kegiatan.storePenyerahan', modalState.kegiatan.id), { onSuccess: closeModal });
+        formBeritaAcara.post(route('pegawai.kegiatan.storeBeritaAcara', modalState.selectedKegiatan.id), {
+            onSuccess: () => closeModal('BeritaAcara'),
+        });
     };
-    const handlePenyelesaianSubmit = (e) => {
-        e.preventDefault();
-        postPenyelesaian(route('pegawai.kegiatan.selesaikan', modalState.kegiatan.id), { onSuccess: closeModal });
+
+    // Filter kegiatan berdasarkan tahapan
+    const tahapanKegiatan = {
+        'Perjalanan Dinas': kegiatans.data.filter(k => k.tahapan.value === 1),
+        'Dokumentasi Observasi': kegiatans.data.filter(k => k.tahapan.value === 2),
+        'Menunggu Proses Kabid': kegiatans.data.filter(k => k.tahapan.value === 3),
+        'Dokumentasi Penyerahan': kegiatans.data.filter(k => k.tahapan.value === 4),
+        'Penyelesaian': kegiatans.data.filter(k => k.tahapan.value === 5),
+        'Selesai / Diarsipkan': kegiatans.data.filter(k => k.tahapan.value === 6 || k.tahapan.value === 7),
     };
 
     return (
-        <AuthenticatedLayout user={auth.user} header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Daftar Kegiatan Saya</h2>}>
-            <Head title="Daftar Kegiatan Saya" />
+        <PegawaiLayout user={auth.user} header="Kegiatan Saya">
+            <Head title="Kegiatan Saya" />
+
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            <div className="mb-6 flex flex-wrap gap-2">
-                                {/* Tombol-tombol tab tidak berubah */}
-                                <button onClick={() => handleTabClick('semua')} className={getButtonTabClass('semua')}>Semua Tugas Aktif</button>
-                                <button onClick={() => handleTabClick('perjalanan_dinas')} className={getButtonTabClass('perjalanan_dinas')}>Perjalanan Dinas</button>
-                                <button onClick={() => handleTabClick('dokumentasi_observasi')} className={getButtonTabClass('dokumentasi_observasi')}>Dokumentasi Observasi</button>
-                                <button onClick={() => handleTabClick('menunggu_proses_kabid')} className={getButtonTabClass('menunggu_proses_kabid')}>Menunggu Proses Kabid</button>
-                                <button onClick={() => handleTabClick('dokumentasi_penyerahan')} className={getButtonTabClass('dokumentasi_penyerahan')}>Dokumentasi Penyerahan</button>
-                                <button onClick={() => handleTabClick('penyelesaian')} className={getButtonTabClass('penyelesaian')}>Penyelesaian</button>
-                                <button onClick={() => handleTabClick('selesai')} className={getButtonTabClass('selesai')}>Selesai</button>
-                            </div>
-                            <div className="overflow-auto">
-                                {/* --- PERUBAHAN UTAMA: MENAMPILKAN VIEW SECARA KONDISIONAL --- */}
-                                {(activeTab === 'semua' || activeTab === 'perjalanan_dinas') &&
-                                    <PerjalananDinasView kegiatans={kegiatans} openModal={openModal} />
-                                }
-                                {activeTab === 'dokumentasi_observasi' &&
-                                    <DokumentasiObservasiView kegiatans={kegiatans} openModal={openModal} />
-                                }
-                                {activeTab === 'menunggu_proses_kabid' &&
-                                    <MenungguProsesKabidView kegiatans={kegiatans} />
-                                }
-                                {activeTab === 'dokumentasi_penyerahan' &&
-                                    <DokumentasiPenyerahanView kegiatans={kegiatans} openModal={openModal} />
-                                }
-                                {activeTab === 'penyelesaian' &&
-                                    <PenyelesaianView kegiatans={kegiatans} openModal={openModal} />
-                                }
-                                {activeTab === 'selesai' &&
-                                    <SelesaiView kegiatans={kegiatans} />
-                                }
-                            </div>
-                            <Pagination links={kegiatans.links} className="mt-6"/>
-                        </div>
+                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">
+                        <Tab.Group>
+                            <Tab.List className="flex space-x-1 rounded-xl bg-blue-900/20 p-1">
+                                {Object.keys(tahapanKegiatan).map((tahap) => (
+                                    <Tab
+                                        key={tahap}
+                                        className={({ selected }) =>
+                                            classNames(
+                                                'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
+                                                'ring-white/60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2',
+                                                selected
+                                                    ? 'bg-white text-blue-700 shadow'
+                                                    : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'
+                                            )
+                                        }
+                                    >
+                                        {tahap}
+                                    </Tab>
+                                ))}
+                            </Tab.List>
+                            <Tab.Panels className="mt-2">
+                                <Tab.Panel><PerjalananDinasView kegiatans={tahapanKegiatan['Perjalanan Dinas']} /></Tab.Panel>
+                                <Tab.Panel><DokumentasiObservasiView kegiatans={tahapanKegiatan['Dokumentasi Observasi']} onOpenKebutuhanModal={kegiatan => openModal('Kebutuhan', kegiatan)} /></Tab.Panel>
+                                <Tab.Panel><MenungguProsesKabidView kegiatans={tahapanKegiatan['Menunggu Proses Kabid']} /></Tab.Panel>
+                                <Tab.Panel><DokumentasiPenyerahanView kegiatans={tahapanKegiatan['Dokumentasi Penyerahan']} onOpenKontrakModal={kegiatan => openModal('Kontrak', kegiatan)} /></Tab.Panel>
+                                <Tab.Panel><PenyelesaianView kegiatans={tahapanKegiatan['Penyelesaian']} onOpenBeritaAcaraModal={kegiatan => openModal('BeritaAcara', kegiatan)} /></Tab.Panel>
+                                <Tab.Panel><SelesaiView kegiatans={tahapanKegiatan['Selesai / Diarsipkan']} /></Tab.Panel>
+                            </Tab.Panels>
+                        </Tab.Group>
                     </div>
                 </div>
             </div>
             
-            {/* --- MODALS (Tidak ada perubahan di sini) --- */}
-            <Modal show={modalState.type === 'confirm'} onClose={closeModal}>
-                <form onSubmit={handleConfirm} className="p-6"><h2 className="text-lg font-medium text-gray-900">Konfirmasi Kehadiran</h2><p className="mt-1 text-sm text-gray-600">Apakah Anda yakin akan melaksanakan kegiatan "{modalState.kegiatan?.nama_kegiatan}"?</p><div className="mt-6 flex justify-end"><SecondaryButton onClick={closeModal}>Batal</SecondaryButton><PrimaryButton className="ms-3" disabled={processingConfirm}>Ya, Konfirmasi</PrimaryButton></div></form>
+            {/* Modal untuk Input Kebutuhan */}
+            <Modal show={modalState.showKebutuhan} onClose={() => closeModal('Kebutuhan')}>
+                <form onSubmit={submitKebutuhan} className="p-6">
+                    <h2 className="text-lg font-medium text-gray-900">Input Data Kebutuhan</h2>
+                    <div className="mt-6 space-y-4">
+                        <div>
+                            <InputLabel htmlFor="nama_kebutuhan" value="Nama Kebutuhan" />
+                            <TextInput id="nama_kebutuhan" className="w-full" value={formKebutuhan.data.nama_kebutuhan} onChange={e => formKebutuhan.setData('nama_kebutuhan', e.target.value)} />
+                            <InputError message={formKebutuhan.errors.nama_kebutuhan} />
+                        </div>
+                        <div>
+                            <InputLabel htmlFor="jumlah" value="Jumlah" />
+                            <TextInput id="jumlah" type="number" className="w-full" value={formKebutuhan.data.jumlah} onChange={e => formKebutuhan.setData('jumlah', e.target.value)} />
+                             <InputError message={formKebutuhan.errors.jumlah} />
+                        </div>
+                        <div>
+                            <InputLabel htmlFor="satuan" value="Satuan" />
+                            <TextInput id="satuan" className="w-full" value={formKebutuhan.data.satuan} onChange={e => formKebutuhan.setData('satuan', e.target.value)} />
+                             <InputError message={formKebutuhan.errors.satuan} />
+                        </div>
+                        <div>
+                            <InputLabel htmlFor="harga_satuan" value="Harga Satuan" />
+                            <TextInput id="harga_satuan" type="number" className="w-full" value={formKebutuhan.data.harga_satuan} onChange={e => formKebutuhan.setData('harga_satuan', e.target.value)} />
+                             <InputError message={formKebutuhan.errors.harga_satuan} />
+                        </div>
+                    </div>
+                    <div className="mt-6 flex justify-end">
+                        <SecondaryButton onClick={() => closeModal('Kebutuhan')}>Batal</SecondaryButton>
+                        <PrimaryButton className="ml-3" disabled={formKebutuhan.processing}>Simpan</PrimaryButton>
+                    </div>
+                </form>
             </Modal>
-            <Modal show={modalState.type === 'docs'} onClose={closeModal}>
-                <form onSubmit={handleDocsSubmit} className="p-6" encType="multipart/form-data"><h2 className="text-lg font-medium text-gray-900">Dokumentasi Observasi</h2><div className="mt-6"><InputLabel htmlFor="nama_dokumentasi" value="Judul Dokumentasi" /><TextInput id="nama_dokumentasi" className="mt-1 block w-full" value={docsData.nama_dokumentasi} onChange={(e) => setDocsData('nama_dokumentasi', e.target.value)} required /><InputError message={docsErrors.nama_dokumentasi} className="mt-2" /></div><div className="mt-4"><InputLabel htmlFor="catatan_observasi" value="Catatan Observasi" /><TextAreaInput id="catatan_observasi" className="mt-1 block w-full" value={docsData.catatan_observasi} onChange={(e) => setDocsData('catatan_observasi', e.target.value)} /><InputError message={docsErrors.catatan_observasi} className="mt-2" /></div><div className="mt-4"><InputLabel htmlFor="foto_path" value="Unggah Foto Bukti" /><TextInput id="foto_path" type="file" className="mt-1 block w-full" onChange={(e) => setDocsData('foto_path', e.target.files[0])} /><InputError message={docsErrors.foto_path} className="mt-2" /></div><div className="mt-6 flex justify-end"><SecondaryButton onClick={closeModal}>Batal</SecondaryButton><PrimaryButton className="ms-3" disabled={processingDocs}>Simpan</PrimaryButton></div></form>
+
+            {/* Modal untuk Input Kontrak */}
+            <Modal show={modalState.showKontrak} onClose={() => closeModal('Kontrak')}>
+                 <form onSubmit={submitKontrak} className="p-6">
+                    <h2 className="text-lg font-medium text-gray-900">Input Dokumen Pihak Ketiga</h2>
+                     <div className="mt-6 space-y-4">
+                        <div>
+                            <InputLabel htmlFor="nama_pihak_ketiga" value="Nama Pihak Ketiga" />
+                            <TextInput id="nama_pihak_ketiga" className="w-full" value={formKontrak.data.nama_pihak_ketiga} onChange={e => formKontrak.setData('nama_pihak_ketiga', e.target.value)} />
+                            <InputError message={formKontrak.errors.nama_pihak_ketiga} />
+                        </div>
+                        <div>
+                            <InputLabel htmlFor="nomor_kontrak" value="Nomor Kontrak" />
+                            <TextInput id="nomor_kontrak" className="w-full" value={formKontrak.data.nomor_kontrak} onChange={e => formKontrak.setData('nomor_kontrak', e.target.value)} />
+                             <InputError message={formKontrak.errors.nomor_kontrak} />
+                        </div>
+                        <div>
+                            <InputLabel htmlFor="tanggal_kontrak" value="Tanggal Kontrak" />
+                            <TextInput id="tanggal_kontrak" type="date" className="w-full" value={formKontrak.data.tanggal_kontrak} onChange={e => formKontrak.setData('tanggal_kontrak', e.target.value)} />
+                             <InputError message={formKontrak.errors.tanggal_kontrak} />
+                        </div>
+                        <div>
+                            <InputLabel htmlFor="dokumen_kontrak" value="File Dokumen Kontrak" />
+                            <TextInput id="dokumen_kontrak" type="file" className="w-full" onChange={e => formKontrak.setData('dokumen_kontrak', e.target.files[0])} />
+                             <InputError message={formKontrak.errors.dokumen_kontrak} />
+                        </div>
+                    </div>
+                    <div className="mt-6 flex justify-end">
+                        <SecondaryButton onClick={() => closeModal('Kontrak')}>Batal</SecondaryButton>
+                        <PrimaryButton className="ml-3" disabled={formKontrak.processing}>Simpan</PrimaryButton>
+                    </div>
+                </form>
             </Modal>
-            <Modal show={modalState.type === 'penyerahan'} onClose={closeModal}>
-                <form onSubmit={handlePenyerahanSubmit} className="p-6" encType="multipart/form-data"><h2 className="text-lg font-medium text-gray-900">Dokumentasi Penyerahan</h2><div className="mt-6"><InputLabel htmlFor="nama_dokumentasi_penyerahan" value="Judul Dokumentasi" /><TextInput id="nama_dokumentasi_penyerahan" className="mt-1 block w-full" value={penyerahanData.nama_dokumentasi} onChange={(e) => setPenyerahanData('nama_dokumentasi', e.target.value)} required /><InputError message={penyerahanErrors.nama_dokumentasi} className="mt-2" /></div><div className="mt-4"><InputLabel htmlFor="foto_path_penyerahan" value="Unggah Foto Bukti" /><TextInput id="foto_path_penyerahan" type="file" className="mt-1 block w-full" onChange={(e) => setPenyerahanData('foto_path', e.target.files[0])} /><InputError message={penyerahanErrors.foto_path} className="mt-2" /></div><div className="mt-6 flex justify-end"><SecondaryButton onClick={closeModal}>Batal</SecondaryButton><PrimaryButton className="ms-3" disabled={processingPenyerahan}>Simpan</PrimaryButton></div></form>
+
+            {/* Modal untuk Input Berita Acara */}
+            <Modal show={modalState.showBeritaAcara} onClose={() => closeModal('BeritaAcara')}>
+                <form onSubmit={submitBeritaAcara} className="p-6">
+                    <h2 className="text-lg font-medium text-gray-900">Input Berita Acara</h2>
+                    <div className="mt-6 space-y-4">
+                         <div>
+                            <InputLabel htmlFor="nama_berita_acara" value="Nama Berita Acara" />
+                            <TextInput id="nama_berita_acara" className="w-full" value={formBeritaAcara.data.nama_berita_acara} onChange={e => formBeritaAcara.setData('nama_berita_acara', e.target.value)} />
+                            <InputError message={formBeritaAcara.errors.nama_berita_acara} />
+                        </div>
+                        <div>
+                            <InputLabel htmlFor="nomor_berita_acara" value="Nomor Berita Acara" />
+                            <TextInput id="nomor_berita_acara" className="w-full" value={formBeritaAcara.data.nomor_berita_acara} onChange={e => formBeritaAcara.setData('nomor_berita_acara', e.target.value)} />
+                            <InputError message={formBeritaAcara.errors.nomor_berita_acara} />
+                        </div>
+                        <div>
+                            <InputLabel htmlFor="tanggal_berita_acara" value="Tanggal Berita Acara" />
+                            <TextInput id="tanggal_berita_acara" type="date" className="w-full" value={formBeritaAcara.data.tanggal_berita_acara} onChange={e => formBeritaAcara.setData('tanggal_berita_acara', e.target.value)} />
+                            <InputError message={formBeritaAcara.errors.tanggal_berita_acara} />
+                        </div>
+                         <div>
+                            <InputLabel htmlFor="dokumen_berita_acara" value="File Dokumen" />
+                            <TextInput id="dokumen_berita_acara" type="file" className="w-full" onChange={e => formBeritaAcara.setData('dokumen_berita_acara', e.target.files[0])} />
+                            <InputError message={formBeritaAcara.errors.dokumen_berita_acara} />
+                        </div>
+                    </div>
+                    <div className="mt-6 flex justify-end">
+                        <SecondaryButton onClick={() => closeModal('BeritaAcara')}>Batal</SecondaryButton>
+                        <PrimaryButton className="ml-3" disabled={formBeritaAcara.processing}>Simpan</PrimaryButton>
+                    </div>
+                </form>
             </Modal>
-            <Modal show={modalState.type === 'penyelesaian'} onClose={closeModal}>
-                <form onSubmit={handlePenyelesaianSubmit} className="p-6" encType="multipart/form-data"><h2 className="text-lg font-medium text-gray-900">Penyelesaian Kegiatan</h2><div className="mt-6"><InputLabel htmlFor="file_berita_acara" value="Unggah Berita Acara" /><TextInput id="file_berita_acara" type="file" className="mt-1 block w-full" onChange={(e) => setPenyelesaianData('file_berita_acara', e.target.files[0])} required /><InputError message={penyelesaianErrors.file_berita_acara} className="mt-2" /></div><div className="mt-4"><InputLabel htmlFor="status_akhir" value="Status Akhir" /><SelectInput id="status_akhir" className="mt-1 block w-full" value={penyelesaianData.status_akhir} onChange={(e) => setPenyelesaianData('status_akhir', e.target.value)}><option>Selesai</option><option>Ditunda</option><option>Dibatalkan</option></SelectInput><InputError message={penyelesaianErrors.status_akhir} className="mt-2" /></div><div className="mt-6 flex justify-end"><SecondaryButton onClick={closeModal}>Batal</SecondaryButton><PrimaryButton className="ms-3" disabled={processingPenyelesaian}>Selesaikan Kegiatan</PrimaryButton></div></form>
-            </Modal>
-        </AuthenticatedLayout>
+        </PegawaiLayout>
     );
 }

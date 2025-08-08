@@ -21,11 +21,12 @@ class StoreBeritaAcaraRequest extends FormRequest
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
-    {
-        return [
-            'file_berita_acara' => 'required|file|mimes:pdf,doc,docx|max:2048',
-            'detail_akhir_kegiatan' => 'required|string',
-            'status_akhir' => ['required', Rule::in(['Selesai', 'Ditunda', 'Dibatalkan'])],
-        ];
-    }
+        {
+            return [
+                'nama_berita_acara' => ['required', 'string', 'max:255'], // Tambahkan ini
+                'nomor_berita_acara' => ['required', 'string', 'max:255'],
+                'tanggal_berita_acara' => ['required', 'date'],
+                'dokumen_berita_acara' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+            ];
+        }
 }

@@ -1,28 +1,35 @@
 <?php
+// Ganti Isi File: app/Models/Kegiatan.php
 
 namespace App\Models;
 
+use App\Enums\TahapanKegiatan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-
 class Kegiatan extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'nama_kegiatan',
-        'tanggal_kegiatan',
-        'sktl_path',
-        'sktl_penyerahan_path',
         'proposal_id',
         'tim_id',
-        'status_kegiatan',
+        'nama_kegiatan',
+        'sktl',
+        'sktl_penyerahan_path', // Tambahkan ini
+        'anggaran',
+        'tanggal_mulai',
+        'tanggal_selesai',
         'tahapan',
-        'created_by', // PERBAIKAN: Menambahkan 'created_by' ke dalam $fillable.
+        'status_akhir',
+        'file_pihak_ketiga_path'
+    ];
+
+    protected $casts = [
+        'tahapan' => TahapanKegiatan::class,
     ];
 
     public function proposal(): BelongsTo
@@ -38,22 +45,20 @@ class Kegiatan extends Model
     public function dokumentasi(): HasMany
     {
         return $this->hasMany(DokumentasiKegiatan::class);
-        
     }
 
-    public function beritaAcara(): HasOne
+    public function kebutuhan(): HasMany
     {
-        return $this->hasOne(BeritaAcara::class);
+        return $this->hasMany(Kebutuhan::class);
     }
 
-    public function createdBy(): BelongsTo
+    public function kontrak(): HasMany
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->hasMany(Kontrak::class);
     }
-    public function kontrak(): HasOne
+
+    public function beritaAcaras(): HasMany
     {
-        return $this->hasOne(Kontrak::class, 'kegiatan_id');
-        
+        return $this->hasMany(BeritaAcara::class);
     }
-    
 }

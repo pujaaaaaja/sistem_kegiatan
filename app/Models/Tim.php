@@ -34,4 +34,8 @@ class Tim extends Model
     {
         return $this->hasMany(Kegiatan::class);
     }
+        public function pegawai(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'pegawai_tim');
+    }
 }
