@@ -24,6 +24,7 @@ class KegiatanResource extends JsonResource
             'tim' => new TimResource($this->whenLoaded('tim')),
             'dokumentasi' => DokumentasiKegiatanResource::collection($this->whenLoaded('dokumentasi')),
             // Load relasi baru
+            'created_by' => new UserResource($this->whenLoaded('createdBy')),
             'kebutuhan' => KebutuhanResource::collection($this->whenLoaded('kebutuhan')),
             'kontrak' => KontrakResource::collection($this->whenLoaded('kontrak')),
             'berita_acaras' => BeritaAcaraResource::collection($this->whenLoaded('beritaAcaras')),

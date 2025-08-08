@@ -27,8 +27,8 @@ class StoreProposalRequest extends FormRequest
         // Sesuaikan dengan form yang simpel
         return [
             'nama_proposal' => ['required', 'string', 'max:255'],
-            'tanggal_proposal' => ['required', 'date'],
-            'file_path' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:2048'],
+            'tanggal_pengajuan' => ['required', 'date'],
+            'dokumen_path' => ['required', 'file', 'mimes:pdf,doc,docx'],
         ];
     }
 }

@@ -58,14 +58,30 @@ class ProposalController extends Controller
      */
     public function store(StoreProposalRequest $request)
     {
+        $this->authorize('create', Proposal::class);
+
+        // Data yang sudah tervalidasi sekarang mencakup nama, tanggal, dan file
         $data = $request->validated();
-        $data['user_id'] = Auth::id();
-        $path = $data['file_path']->store('proposal_files', 'public');
-        $data['file_path'] = $path;
+        
+        // PERHATIAN: $request->validated() SEKARANG MENGANDUNG 'dokumen_path'
+        // sehingga variabel $dokumen tidak terlalu dibutuhkan jika hanya untuk cek
+        $dokumen = $data['dokumen_path'] ?? null;
+
+        $data['pengusul_id'] = Auth::id();
+        $data['status'] = 'diajukan';
+
+        // PERBAIKAN: HAPUS BARIS INI!
+        // Baris ini menimpa tanggal yang sudah diisi oleh pengguna.
+        // $data['tanggal_pengajuan'] = now()->toDateString(); 
+
+        if ($dokumen && $request->hasFile('dokumen_path')) {
+            $data['dokumen_path'] = $dokumen->store('proposal_dokumen', 'public');
+        }
 
         Proposal::create($data);
 
-        return redirect()->route('proposal.myIndex')->with('success', 'Proposal berhasil dibuat.');
+        // Arahkan ke halaman daftar proposal milik pengguna
+        return to_route('proposal.index')->with('success', 'Proposal berhasil diajukan dan sedang menunggu verifikasi.');
     }
 
     /**
@@ -75,7 +91,7 @@ class ProposalController extends Controller
     public function myProposals()
     {
         $proposals = Proposal::query()
-            ->where('user_id', Auth::id())
+            ->where('pengusul_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -121,6 +137,9 @@ class ProposalController extends Controller
                 Storage::disk('public')->delete($proposal->dokumen_path);
             }
             $data['dokumen_path'] = $dokumen->store('proposal_dokumen', 'public');
+        } else {
+            // Jika tidak ada file baru, hapus dokumen_path dari data
+            unset($data['dokumen_path']);
         }
 
         $proposal->update($data);
@@ -153,10 +172,8 @@ class ProposalController extends Controller
         // Otorisasi untuk memastikan hanya kabid/admin yang bisa akses
         $this->authorize('viewApproved', Proposal::class);
 
-        // --- PERBAIKAN DI SINI ---
-        // Mengubah 'user' menjadi 'pengusul' agar konsisten
         $query = Proposal::with('pengusul')
-            ->where('status', 'disetujui') // <-- Filter utama
+            ->where('status', 'disetujui')
             ->orderBy('updated_at', 'desc');
 
         $proposals = $query->paginate(10);

@@ -27,7 +27,7 @@ class UpdateProposalRequest extends FormRequest
             'nama_proposal' => 'required|string|max:255',
             'tanggal_pengajuan' => 'required|date',
             // File tidak wajib diisi saat update
-            'file_path' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+            'dokumen_path' => 'nullable|file|mimes:pdf,doc,docx',
         ];
     }
 }

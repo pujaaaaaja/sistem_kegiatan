@@ -30,11 +30,11 @@ class DashboardController extends Controller
             ];
         } 
         elseif ($user->role ===('pengusul')) {
-            $stats = [
-                'proposal_pending' => Proposal::where('user_id', $user->id)->where('status', 'pending')->count(),
-                'proposal_disetujui' => Proposal::where('user_id', $user->id)->where('status', 'approved')->count(),
-                'proposal_ditolak' => Proposal::where('user_id', $user->id)->where('status', 'rejected')->count(),
-            ];
+            // $stats = [
+            //     'proposal_pending' => Proposal::where('user_id', $user->id)->where('status', 'disetujui')->count(),
+            //     'proposal_disetujui' => Proposal::where('user_id', $user->id)->where('status', 'disetujui')->count(),
+            //     'proposal_ditolak' => Proposal::where('user_id', $user->id)->where('status', 'disetujui')->count(),
+            // ];
         } 
         elseif ($user->role ===('pegawai')) {
             $stats = [

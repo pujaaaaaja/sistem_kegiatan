@@ -1,28 +1,20 @@
+// FUNGSI: Halaman utama untuk menampilkan daftar kegiatan.
+
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
-import { useEffect } from 'react'; // <-- 1. Import useEffect
-import Swal from 'sweetalert2'; // <-- 2. Import Swal
-import Pagination from "@/Components/Pagination";
+import { Head, Link } from '@inertiajs/react';
+
+// Asumsi Anda memiliki komponen Pagination
+// import Pagination from '@/Components/Pagination';
 
 export default function Index({ auth, kegiatans, success }) {
-  // 3. Gunakan useEffect untuk memantau prop 'success'
-  useEffect(() => {
-    if (success) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: success,
-        timer: 3000, // Notifikasi akan hilang setelah 3 detik
-        showConfirmButton: false,
-      });
-    }
-  }, [success]); // Efek ini akan berjalan setiap kali nilai 'success' berubah
 
+  // Fungsi untuk menghapus (jika diperlukan)
   const deleteKegiatan = (kegiatan) => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus kegiatan ini?')) {
       return;
     }
-    router.delete(route('kegiatan.destroy', kegiatan.id));
+    // Sesuaikan dengan route Anda jika ada
+    // router.delete(route('kegiatan.destroy', kegiatan.id)); 
   };
 
   return (
@@ -37,7 +29,7 @@ export default function Index({ auth, kegiatans, success }) {
             href={route('kegiatan.create')}
             className="bg-emerald-500 py-1 px-3 text-white rounded shadow transition-all hover:bg-emerald-600"
           >
-            Tambah Kegiatan Baru
+            Buat Kegiatan Baru
           </Link>
         </div>
       }
@@ -46,12 +38,11 @@ export default function Index({ auth, kegiatans, success }) {
 
       <div className="py-12">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          {/* Kita tidak perlu lagi menampilkan notifikasi manual di sini */}
-          {/* {success && (
+          {success && (
             <div className="bg-emerald-500 py-2 px-4 rounded mb-4 text-white">
               {success}
             </div>
-          )} */}
+          )}
           <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div className="p-6 text-gray-900">
               <div className="overflow-auto">
@@ -61,7 +52,7 @@ export default function Index({ auth, kegiatans, success }) {
                       <th className="px-3 py-3">Nama Kegiatan</th>
                       <th className="px-3 py-3">Proposal Terkait</th>
                       <th className="px-3 py-3">Tim</th>
-                      <th className="px-3 py-3">Tgl. Kegiatan</th>
+                      <th className="px-3 py-3">Tgl Kegiatan</th>
                       <th className="px-3 py-3">Dibuat Oleh</th>
                       <th className="px-3 py-3">SKTL</th>
                       <th className="px-3 py-3 text-right">Aksi</th>
@@ -69,20 +60,30 @@ export default function Index({ auth, kegiatans, success }) {
                   </thead>
                   <tbody>
                     {kegiatans.data.map((kegiatan) => (
-                      <tr key={kegiatan.id} className="bg-white border-b">
+                      <tr
+                        key={kegiatan.id}
+                        className="bg-white border-b"
+                      >
                         <td className="px-3 py-2">{kegiatan.nama_kegiatan}</td>
                         <td className="px-3 py-2">{kegiatan.proposal?.nama_proposal || 'N/A'}</td>
-                        <td className="px-3 py-2">{kegiatan.tim?.nama_tim || 'Belum Ditentukan'}</td>
+                        <td className="px-3 py-2">{kegiatan.tim?.nama_tim || 'N/A'}</td>
                         <td className="px-3 py-2 text-nowrap">{kegiatan.tanggal_kegiatan}</td>
+                        
+                        {/* --- PERBAIKAN UTAMA DI SINI --- */}
+                        {/* Mengakses nama dari relasi createdBy */}
                         <td className="px-3 py-2">{kegiatan.createdBy?.name || 'N/A'}</td>
+
                         <td className="px-3 py-2">
-                          {kegiatan.sktl_path ? (
-                            <a href={kegiatan.sktl_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                              Lihat SKTL
-                            </a>
-                          ) : 'Tidak Ada'}
+                           {/* Memeriksa apakah path SKTL ada */}
+                           {kegiatan.sktl_path ? (
+                             <a href={`/storage/${kegiatan.sktl_path}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                               Lihat File
+                             </a>
+                           ) : (
+                             <span className="text-gray-400">Tidak Ada</span>
+                           )}
                         </td>
-                        <td className="px-3 py-2 text-right text-nowrap">
+                        <td className="px-3 py-2 text-right">
                           <Link
                             href={route('kegiatan.edit', kegiatan.id)}
                             className="font-medium text-blue-600 hover:underline mx-1"
@@ -100,8 +101,8 @@ export default function Index({ auth, kegiatans, success }) {
                     ))}
                   </tbody>
                 </table>
+                {/* <Pagination links={kegiatans.meta.links} /> */}
               </div>
-              <Pagination links={kegiatans.meta.links} className="mt-6" />
             </div>
           </div>
         </div>

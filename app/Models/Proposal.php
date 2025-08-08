@@ -12,16 +12,19 @@ class Proposal extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
+        'pengusul_id',
         'nama_proposal', // Sederhanakan
-        'tanggal_proposal', // Sederhanakan
-        'file_path', // Sederhanakan
+        'tanggal_pengajuan', // Sederhanakan
+        'dokumen_path', // Sederhanakan
         'status',
         'catatan_revisi',
+        'alasan_penolakan', // <-- Tambahkan ini (dari migrasi)
+        'verifikator_id',
+        'verified_at',
     ];
 
     public function pengusul(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'pengusul_id');
     }
 }

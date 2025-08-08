@@ -5,7 +5,7 @@ export default function SidebarPegawai() {
         <div className="flex flex-col space-y-2">
             {/* Tautan utama untuk Pegawai */}
             <NavLink 
-                href={route('pegawai.kegiatan.myIndex')} 
+                href={route('pegawai.kegiatan.index')} 
                 active={route().current('pegawai.kegiatan.myIndex')}
                 className="w-full text-left"
             >

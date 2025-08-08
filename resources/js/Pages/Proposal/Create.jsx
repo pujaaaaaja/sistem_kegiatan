@@ -1,77 +1,137 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
-import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
+import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
+import TextAreaInput from '@/Components/TextAreaInput';
+import SelectInput from '@/Components/SelectInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 
-export default function Create({ auth }) {
+export default function Create({ auth, proposals, tims }) {
+    // --- PERBAIKAN STATE FORM ---
     const { data, setData, post, errors, processing } = useForm({
-        nama_proposal: '',
-        tanggal_proposal: '',
-        file_path: null,
+        nama_kegiatan: '',
+        // UBAH: 'deskripsi_kegiatan' menjadi 'ket_kegiatan'
+        ket_kegiatan: '', 
+        tanggal_kegiatan: '',
+        proposal_id: '',
+        tim_id: '',
+        sktl_path: null,
     });
 
-    const submit = (e) => {
+    const onSubmit = (e) => {
         e.preventDefault();
-        post(route('proposal.store'));
+        post(route('kegiatan.store'));
     };
+
+    const proposalList = proposals.data || proposals;
+    const timList = tims.data || tims;
 
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Buat Proposal Baru</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Buat Kegiatan Baru</h2>}
         >
-            <Head title="Buat Proposal" />
+            <Head title="Buat Kegiatan" />
 
             <div className="py-12">
-                <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            <form onSubmit={submit} className="flex flex-col gap-4">
-                                <div>
-                                    <InputLabel htmlFor="nama_proposal" value="Nama Proposal" />
+                        <div className="p-6 bg-white border-b border-gray-200">
+                            <form onSubmit={onSubmit}>
+                                <div className="mt-4">
+                                    <InputLabel htmlFor="nama_kegiatan" value="Nama Kegiatan" />
                                     <TextInput
-                                        id="nama_proposal"
-                                        name="nama_proposal"
-                                        value={data.nama_proposal}
+                                        id="nama_kegiatan"
+                                        name="nama_kegiatan"
+                                        value={data.nama_kegiatan}
                                         className="mt-1 block w-full"
-                                        onChange={(e) => setData('nama_proposal', e.target.value)}
-                                        required
+                                        isFocused={true}
+                                        onChange={(e) => setData('nama_kegiatan', e.target.value)}
                                     />
-                                    <InputError message={errors.nama_proposal} className="mt-2" />
+                                    <InputError message={errors.nama_kegiatan} className="mt-2" />
                                 </div>
 
-                                <div>
-                                    <InputLabel htmlFor="tanggal_proposal" value="Tanggal Proposal" />
+                                {/* --- PERBAIKAN INPUT DESKRIPSI --- */}
+                                <div className="mt-4">
+                                    {/* UBAH: htmlFor dan value */}
+                                    <InputLabel htmlFor="ket_kegiatan" value="Deskripsi Kegiatan" />
+                                    <TextAreaInput
+                                        // UBAH: id, name, value, dan setData
+                                        id="ket_kegiatan"
+                                        name="ket_kegiatan"
+                                        value={data.ket_kegiatan}
+                                        className="mt-1 block w-full"
+                                        onChange={(e) => setData('ket_kegiatan', e.target.value)}
+                                    />
+                                    {/* UBAH: message error */}
+                                    <InputError message={errors.ket_kegiatan} className="mt-2" />
+                                </div>
+
+                                <div className="mt-4">
+                                    <InputLabel htmlFor="tanggal_kegiatan" value="Tanggal Kegiatan" />
                                     <TextInput
-                                        id="tanggal_proposal"
+                                        id="tanggal_kegiatan"
                                         type="date"
-                                        name="tanggal_proposal"
-                                        value={data.tanggal_proposal}
+                                        name="tanggal_kegiatan"
+                                        value={data.tanggal_kegiatan}
                                         className="mt-1 block w-full"
-                                        onChange={(e) => setData('tanggal_proposal', e.target.value)}
-                                        required
+                                        onChange={(e) => setData('tanggal_kegiatan', e.target.value)}
                                     />
-                                    <InputError message={errors.tanggal_proposal} className="mt-2" />
+                                    <InputError message={errors.tanggal_kegiatan} className="mt-2" />
                                 </div>
 
-                                <div>
-                                    <InputLabel htmlFor="file_path" value="File Proposal (PDF/DOCX)" />
+                                <div className="mt-4">
+                                    <InputLabel htmlFor="proposal_id" value="Proposal Terkait" />
+                                    <SelectInput
+                                        id="proposal_id"
+                                        name="proposal_id"
+                                        className="mt-1 block w-full"
+                                        onChange={(e) => setData('proposal_id', e.target.value)}
+                                    >
+                                        <option value="">Pilih Proposal</option>
+                                        {proposalList.map((proposal) => (
+                                            <option key={proposal.id} value={proposal.id}>
+                                                {proposal.nama_proposal}
+                                            </option>
+                                        ))}
+                                    </SelectInput>
+                                    <InputError message={errors.proposal_id} className="mt-2" />
+                                </div>
+
+                                <div className="mt-4">
+                                    <InputLabel htmlFor="tim_id" value="Tim yang Ditugaskan" />
+                                    <SelectInput
+                                        id="tim_id"
+                                        name="tim_id"
+                                        className="mt-1 block w-full"
+                                        onChange={(e) => setData('tim_id', e.target.value)}
+                                    >
+                                        <option value="">Pilih Tim</option>
+                                        {timList.map((tim) => (
+                                            <option key={tim.id} value={tim.id}>
+                                                {tim.nama_tim}
+                                            </option>
+                                        ))}
+                                    </SelectInput>
+                                    <InputError message={errors.tim_id} className="mt-2" />
+                                </div>
+
+                                <div className="mt-4">
+                                    <InputLabel htmlFor="sktl_path" value="Unggah SKTL (Surat Keputusan Tugas Lapangan)" />
                                     <TextInput
-                                        id="file_path"
+                                        id="sktl_path"
                                         type="file"
-                                        name="file_path"
+                                        name="sktl_path"
                                         className="mt-1 block w-full"
-                                        onChange={(e) => setData('file_path', e.target.files[0])}
-                                        required
+                                        onChange={(e) => setData('sktl_path', e.target.files[0])}
                                     />
-                                    <InputError message={errors.file_path} className="mt-2" />
+                                    <InputError message={errors.sktl_path} className="mt-2" />
                                 </div>
 
-                                <div className="flex items-center justify-end mt-4">
-                                    <PrimaryButton className="ml-4" disabled={processing}>
-                                        Simpan
+                                <div className="mt-4 text-right">
+                                    <PrimaryButton disabled={processing}>
+                                        Buat Kegiatan
                                     </PrimaryButton>
                                 </div>
                             </form>

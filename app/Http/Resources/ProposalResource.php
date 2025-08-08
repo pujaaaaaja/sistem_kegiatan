@@ -18,8 +18,6 @@ class ProposalResource extends JsonResource
         return [
             'id' => $this->id,
             'nama_proposal' => $this->nama_proposal,
-            'deskripsi' => $this->deskripsi,
-            'tujuan' => $this->tujuan,
             'dokumen_path' => $this->dokumen_path,
             'status' => $this->status,
             'tanggal_pengajuan' => (new \DateTime($this->tanggal_pengajuan))->format('d-m-Y'),

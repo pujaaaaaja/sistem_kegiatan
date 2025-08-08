@@ -17,15 +17,13 @@ class Kegiatan extends Model
     protected $fillable = [
         'proposal_id',
         'tim_id',
+        'created_by', // <-- INI YANG PALING PENTING UNTUK DITAMBAHKAN
         'nama_kegiatan',
-        'sktl',
-        'sktl_penyerahan_path', // Tambahkan ini
-        'anggaran',
-        'tanggal_mulai',
-        'tanggal_selesai',
-        'tahapan',
-        'status_akhir',
-        'file_pihak_ketiga_path'
+        'ket_kegiatan',
+        'tanggal_kegiatan',
+        'sktl_path',
+        'tanggal_penyerahan',     // Dari migrasi kedua
+        'sktl_penyerahan_path', // Dari migrasi kedua
     ];
 
     protected $casts = [
@@ -60,5 +58,9 @@ class Kegiatan extends Model
     public function beritaAcaras(): HasMany
     {
         return $this->hasMany(BeritaAcara::class);
+    }
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }
